@@ -2,43 +2,57 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"io"
 	"os"
-	"strconv"
+	"strings"
 )
 
 func main() {
-	csvfile, err := os.Open("problems.csv")
+	csvFilename := flag.String("csv", "problems.csv", "a correct csv file") // Used to parse CLI args and adds it to the -h of the tool
+	flag.Parse()
+	csvFile, err := os.Open(*csvFilename)
 	if err == nil {
-		r := csv.NewReader(csvfile)
+		r := csv.NewReader(csvFile)
 		correct := 0
-		incorrect := 0
+		total := 0
 
 		for {
 			record, err := r.Read()
-			
+
 			if err == io.EOF {
 				break
 			} else if err != nil {
 				fmt.Printf("Couldn't read the question.")
+				os.Exit(1)
 			}
 
-			fmt.Printf("Question: %s Answer: ", record[0])
+			total++
+			problem := parseLine(record)
 
-			var answer int
-			fmt.Scanf("%d", &answer)
-			
-			correct_answer, _ := strconv.Atoi(record[1])
+			fmt.Printf("Question: %s Answer: ", problem.question)
+			var answer string
+			fmt.Scanf("%s\n", &answer)
 
-			if answer == correct_answer {
-				correct = correct + 1
-			} else {
-				incorrect = incorrect + 1
+			if answer == problem.answer {
+				correct++
 			}
 		}
-		fmt.Printf("Correct answers: %s. Incorrect answers: %s\n", strconv.Itoa(correct), strconv.Itoa(incorrect))
+		fmt.Printf("Correct answers: %d. Incorrect answers: %d\n", correct, total-correct)
 	} else {
 		fmt.Printf("Couldn't open the csv file.")
 	}
+}
+
+func parseLine(line []string) problem {
+	return problem{
+		question: line[0],
+		answer:   strings.TrimSpace(line[1]),
+	}
+}
+
+type problem struct {
+	question string
+	answer   string
 }
