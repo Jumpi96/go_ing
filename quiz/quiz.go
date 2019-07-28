@@ -28,18 +28,22 @@ func main() {
 		fmt.Scanf("%s")
 		timer := time.NewTimer(time.Duration(*duration) * time.Second)
 
-		go func() {
-			<-timer.C
-			fmt.Printf("\nYour time has ended. You've completed %d out of %d questions.\n", correct, len(problems))
-			os.Exit(0)
-		}()
-
 		for _, problem := range problems {
 			fmt.Printf("Question: %s Answer: ", problem.question)
-			var answer string
-			fmt.Scanf("%s\n", &answer)
-			if answer == problem.answer {
-				correct++
+			answerCh := make(chan string)
+			go func() {
+				var answer string
+				fmt.Scanf("%s\n", &answer)
+				answerCh <- answer
+			}()
+			select {
+			case <-timer.C:
+				fmt.Printf("\nYour time has ended. You've completed %d out of %d questions.\n", correct, len(problems))
+				return
+			case answer := <-answerCh:
+				if answer == problem.answer {
+					correct++
+				}
 			}
 		}
 		fmt.Printf("You've completed %d out of %d questions.\n", correct, len(problems))
