@@ -4,42 +4,45 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"io"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
-	csvFilename := flag.String("csv", "problems.csv", "a correct csv file") // Used to parse CLI args and adds it to the -h of the tool
+	csvFilename := flag.String("csv", "problems.csv", "a correct csv file") // Used to parse CLI args and adds it to the -h of the
+	duration := flag.Int("duration", 30, "time in seconds to complete the test")
+	random := flag.Bool("random", false, "add a random order to the problems")
 	flag.Parse()
+
 	csvFile, err := os.Open(*csvFilename)
 	if err == nil {
-		r := csv.NewReader(csvFile)
+		problems := readProblems(csvFile)
+		if *random {
+			shuffle(problems)
+		}
+
 		correct := 0
-		total := 0
+		fmt.Printf("Press enter to start the quiz. You'll have %d seconds to complete it.", *duration)
+		fmt.Scanf("%s")
+		timer := time.NewTimer(time.Duration(*duration) * time.Second)
 
-		for {
-			record, err := r.Read()
+		go func() {
+			<-timer.C
+			fmt.Printf("\nYour time has ended. You've completed %d out of %d questions.\n", correct, len(problems))
+			os.Exit(0)
+		}()
 
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				fmt.Printf("Couldn't read the question.")
-				os.Exit(1)
-			}
-
-			total++
-			problem := parseLine(record)
-
+		for _, problem := range problems {
 			fmt.Printf("Question: %s Answer: ", problem.question)
 			var answer string
 			fmt.Scanf("%s\n", &answer)
-
 			if answer == problem.answer {
 				correct++
 			}
 		}
-		fmt.Printf("Correct answers: %d. Incorrect answers: %d\n", correct, total-correct)
+		fmt.Printf("You've completed %d out of %d questions.\n", correct, len(problems))
 	} else {
 		fmt.Printf("Couldn't open the csv file.")
 	}
@@ -50,6 +53,29 @@ func parseLine(line []string) problem {
 		question: line[0],
 		answer:   strings.TrimSpace(line[1]),
 	}
+}
+
+func shuffle(array []problem) {
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	for i := range array {
+		j := r1.Intn(i + 1)
+		array[i], array[j] = array[j], array[i]
+	}
+}
+
+func readProblems(csvFile *os.File) []problem {
+	r := csv.NewReader(csvFile)
+	records, err := r.ReadAll()
+	if err != nil {
+		fmt.Printf("Couldn't read the problems.")
+		os.Exit(1)
+	}
+	problems := make([]problem, len(records))
+	for i, record := range records {
+		problems[i] = parseLine(record)
+	}
+	return problems
 }
 
 type problem struct {
