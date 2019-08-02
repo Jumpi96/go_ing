@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -19,13 +20,16 @@ func main() {
 
 	// Build the YAMLHandler using the mapHandler as the
 	// fallback
-	yaml := `
-- path: /urlshort
-  url: https://github.com/gophercises/urlshort
-- path: /urlshort-final
-  url: https://github.com/gophercises/urlshort/tree/solution
-`
-	yamlHandler, err := urlshort.YAMLHandler([]byte(yaml), mapHandler)
+	/*	yaml := `
+		- path: /urlshort
+		  url: https://github.com/gophercises/urlshort
+		- path: /urlshort-final
+		  url: https://github.com/gophercises/urlshort/tree/solution
+		`*/
+
+	// Loading from a file
+	yamlFile := flag.String("yaml", "urls.yaml", "a correct url file")
+	yamlHandler, err := urlshort.YAMLFileHandler(*yamlFile, mapHandler)
 	if err != nil {
 		panic(err)
 	}

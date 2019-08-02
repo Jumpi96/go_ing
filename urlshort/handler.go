@@ -1,6 +1,8 @@
 package urlshort
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"gopkg.in/yaml.v2"
@@ -68,4 +70,17 @@ func buildMap(yaml []RedirectObject) map[string]string {
 type RedirectObject struct {
 	Path string `yaml:"path"`
 	URL  string `yaml:"url"`
+}
+
+// YAMLFileHandler will parse the provided YAML file and then return
+// an http.HandlerFunc (which also implements http.Handler)
+// that will attempt to map any paths to their corresponding
+// URL. If the path is not provided in the YAML, then the
+// fallback http.Handler will be called instead.
+func YAMLFileHandler(filename string, fallback http.Handler) (http.HandlerFunc, error) {
+	yaml, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Printf("Error loading file: %s", err)
+	}
+	return YAMLHandler(yaml, fallback)
 }
