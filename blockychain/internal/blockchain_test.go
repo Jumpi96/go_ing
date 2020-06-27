@@ -4,10 +4,15 @@ import (
 	"testing"
 )
 
-func TestAddBlocksToBlockchain(t *testing.T) {
+func generateSimpleBlockchain() *Blockchain {
 	blockchain := NewBlockchain()
 	blockchain = blockchain.AddBlock(NewBlock("", "06/27/2020", data{value: "This is a second block"}))
 	blockchain = blockchain.AddBlock(NewBlock("", "06/27/2020", data{value: "This is the third block"}))
+	return blockchain
+}
+
+func TestAddBlocksToBlockchain(t *testing.T) {
+	blockchain := generateSimpleBlockchain()
 
 	expectedValue := 3
 	if len(blockchain.chain) != expectedValue {
@@ -21,9 +26,7 @@ func TestAddBlocksToBlockchain(t *testing.T) {
 }
 
 func TestIntegrityBeforeAndAfterTamperingIt(t *testing.T) {
-	blockchain := NewBlockchain()
-	blockchain = blockchain.AddBlock(NewBlock("", "06/27/2020", data{value: "This is a second block"}))
-	blockchain = blockchain.AddBlock(NewBlock("", "06/27/2020", data{value: "This is the third block"}))
+	blockchain := generateSimpleBlockchain()
 
 	if !blockchain.IsChainValid() {
 		t.Errorf("Blockchain is not valid.")
@@ -34,5 +37,25 @@ func TestIntegrityBeforeAndAfterTamperingIt(t *testing.T) {
 
 	if blockchain.IsChainValid() {
 		t.Errorf("Blockchain is valid but it should not be because it was tampered.")
+	}
+}
+
+func TestIntegrityAfterBreakingIt(t *testing.T) {
+	blockchain := generateSimpleBlockchain()
+
+	blockchain.chain[2].previousHash = "a"
+
+	if blockchain.IsChainValid() {
+		t.Errorf("Blockchain is valid but it should not be because it was broken.")
+	}
+}
+
+func TestIntegrityAfterReplacingGenesisBlock(t *testing.T) {
+	blockchain := generateSimpleBlockchain()
+
+	blockchain.chain[0] = NewBlock(blockchain.chain[2].hash, "06/27/2020", data{value: "I'm your genesis block."})
+
+	if blockchain.IsChainValid() {
+		t.Errorf("Blockchain is valid but it should not be because its genesis block was replaced.")
 	}
 }
