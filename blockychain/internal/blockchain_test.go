@@ -5,7 +5,7 @@ import (
 )
 
 func generateSimpleBlockchain() *Blockchain {
-	blockchain := NewBlockchain()
+	blockchain := NewBlockchain(1)
 	blockchain = blockchain.AddBlock(NewBlock("", "06/27/2020", data{value: "This is a second block"}))
 	blockchain = blockchain.AddBlock(NewBlock("", "06/27/2020", data{value: "This is the third block"}))
 	return blockchain

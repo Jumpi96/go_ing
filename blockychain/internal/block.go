@@ -2,7 +2,9 @@ package internal
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"strings"
 )
 
 type data struct {
@@ -14,6 +16,7 @@ type Block struct {
 	timestamp    string
 	data         data
 	hash         string
+	nonce        int
 }
 
 func NewBlock(previous string, timestamp string, data data) *Block {
@@ -21,13 +24,27 @@ func NewBlock(previous string, timestamp string, data data) *Block {
 		previousHash: previous,
 		timestamp:    timestamp,
 		data:         data,
+		nonce:        0,
 	}
 	block.hash = calculateHash(block)
 	return block
 }
 
 func calculateHash(b *Block) string {
-	h := sha256.New()
-	input := fmt.Sprintf("%v%v%v", b.previousHash, b.timestamp, b.data)
-	return fmt.Sprintf("%x", h.Sum([]byte(input)))
+	input := fmt.Sprintf("%v%v%v%v", b.previousHash, b.timestamp, b.data, b.nonce)
+	return SHA256(input)
+}
+
+func SHA256(text string) string {
+	algorithm := sha256.New()
+	algorithm.Write([]byte(text))
+	return hex.EncodeToString(algorithm.Sum(nil))
+}
+
+func (b *Block) mineBlock(difficulty int) {
+	goal := strings.Repeat("0", difficulty)
+	for b.hash[:difficulty] != goal {
+		b.nonce++
+		b.hash = calculateHash(b)
+	}
 }

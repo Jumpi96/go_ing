@@ -5,11 +5,12 @@ import (
 )
 
 type Blockchain struct {
-	chain []*Block
+	chain      []*Block
+	difficulty int
 }
 
-func NewBlockchain() *Blockchain {
-	return &Blockchain{chain: []*Block{createGenesisBlock()}}
+func NewBlockchain(difficulty int) *Blockchain {
+	return &Blockchain{chain: []*Block{createGenesisBlock()}, difficulty: difficulty}
 }
 
 func createGenesisBlock() *Block {
@@ -22,7 +23,7 @@ func (c Blockchain) getLatestBlock() *Block {
 
 func (c *Blockchain) AddBlock(newBlock *Block) *Blockchain {
 	newBlock.previousHash = c.getLatestBlock().hash
-	newBlock.hash = calculateHash(newBlock)
+	newBlock.mineBlock(c.difficulty)
 	c.chain = append(c.chain, newBlock)
 	return c
 }
