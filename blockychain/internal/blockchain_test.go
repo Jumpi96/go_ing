@@ -1,12 +1,14 @@
 package internal
 
 import (
+	"os"
 	"testing"
 )
 
 var r = &BoltDBRepository{}
 
 func generateSimpleBlockchain() *Blockchain {
+	os.Remove("blockychain.db")
 	blockchain := NewBlockchain(r, 1)
 	blockchain.AddBlock(r, NewBlock([]byte(""), "06/27/2020", Data{Value: "This is a second block"}))
 	blockchain.AddBlock(r, NewBlock([]byte(""), "06/27/2020", Data{Value: "This is the third block"}))
