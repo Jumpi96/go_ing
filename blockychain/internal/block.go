@@ -1,50 +1,74 @@
 package internal
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/gob"
 	"encoding/hex"
 	"fmt"
 	"strings"
 )
 
-type data struct {
-	value string
+type Data struct {
+	Value string
 }
 
 type Block struct {
-	previousHash string
-	timestamp    string
-	data         data
-	hash         string
-	nonce        int
+	PreviousHash []byte
+	Timestamp    string
+	Data         Data
+	Hash         []byte
+	Nonce        int
 }
 
-func NewBlock(previous string, timestamp string, data data) *Block {
+func NewBlock(previous []byte, Timestamp string, data Data) *Block {
 	block := &Block{
-		previousHash: previous,
-		timestamp:    timestamp,
-		data:         data,
-		nonce:        0,
+		PreviousHash: previous,
+		Timestamp:    Timestamp,
+		Data:         data,
+		Nonce:        0,
 	}
-	block.hash = calculateHash(block)
+	block.Hash = calculateHash(block)
 	return block
 }
 
-func calculateHash(b *Block) string {
-	input := fmt.Sprintf("%v%v%v%v", b.previousHash, b.timestamp, b.data, b.nonce)
+func calculateHash(b *Block) []byte {
+	input := fmt.Sprintf("%v%v%v%v", b.PreviousHash, b.Timestamp, b.Data, b.Nonce)
 	return SHA256(input)
 }
 
-func SHA256(text string) string {
+func SHA256(text string) []byte {
 	algorithm := sha256.New()
 	algorithm.Write([]byte(text))
-	return hex.EncodeToString(algorithm.Sum(nil))
+	return algorithm.Sum(nil)
 }
 
 func (b *Block) mineBlock(difficulty int) {
 	goal := strings.Repeat("0", difficulty)
-	for b.hash[:difficulty] != goal {
-		b.nonce++
-		b.hash = calculateHash(b)
+	for hex.EncodeToString(b.Hash)[:difficulty] != goal {
+		b.Nonce++
+		b.Hash = calculateHash(b)
 	}
+}
+
+func (b *Block) serializeBlock() []byte {
+	buffer := bytes.Buffer{}
+	e := gob.NewEncoder(&buffer)
+	err := e.Encode(b)
+	if err != nil {
+		panic(fmt.Sprintf("Serializing %v", err))
+	}
+	return buffer.Bytes()
+}
+
+func deserializeBlock(d []byte) *Block {
+	b := &Block{}
+	buffer := bytes.Buffer{}
+	buffer.Write(d)
+	decoder := gob.NewDecoder(&buffer)
+	err := decoder.Decode(&b)
+	if err != nil {
+		panic(fmt.Sprintf("Deserializing %v %v", d, err))
+	}
+	return b
 }
