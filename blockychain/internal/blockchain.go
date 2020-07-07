@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"time"
 )
 
 type Blockchain struct {
@@ -24,7 +25,14 @@ func NewBlockchain(r Repository, difficulty int) *Blockchain {
 }
 
 func createGenesisBlock() *Block {
-	return NewBlock(genesisPreviousHash, "06/27/2020", Data{Value: "This is a genesis block."})
+	genesis := &Block{
+		PreviousHash: genesisPreviousHash,
+		Timestamp:    time.Now().Format("02/01/2006"),
+		Data:         Data{Value: "This is a genesis block."},
+		Nonce:        0,
+	}
+	genesis.Hash = calculateHash(genesis)
+	return genesis
 }
 
 func (c Blockchain) GetLatestBlock(r Repository) *Block {
@@ -43,15 +51,16 @@ func (c *Blockchain) AddBlock(r Repository, newBlock *Block) error {
 
 type BlockchainIterator struct {
 	currentHash []byte
+	repository  Repository
 }
 
-func (c *Blockchain) Iterator() *BlockchainIterator {
-	return &BlockchainIterator{c.Tip}
+func (c *Blockchain) Iterator(r Repository) *BlockchainIterator {
+	return &BlockchainIterator{c.Tip, r}
 }
 
-func (i *BlockchainIterator) Next(r Repository) *Block {
-	block, _ := r.GetBlock(i.currentHash)
-	if !bytes.Equal(block.PreviousHash, genesisPreviousHash) {
+func (i *BlockchainIterator) Next() *Block {
+	if !bytes.Equal(i.currentHash, genesisPreviousHash) {
+		block, _ := i.repository.GetBlock(i.currentHash)
 		i.currentHash = block.PreviousHash
 		return block
 	}
@@ -60,15 +69,15 @@ func (i *BlockchainIterator) Next(r Repository) *Block {
 
 func (c *Blockchain) IsChainValid(r Repository) bool {
 	var previousBlock *Block
-	iterator := c.Iterator()
-	currentBlock := iterator.Next(r)
+	iterator := c.Iterator(r)
+	currentBlock := iterator.Next()
 
 	for currentBlock != nil {
 		if !bytes.Equal(currentBlock.Hash, calculateHash(currentBlock)) {
 			return false
 		}
 
-		previousBlock = iterator.Next(r)
+		previousBlock = iterator.Next()
 		if previousBlock != nil {
 			if !bytes.Equal(currentBlock.PreviousHash, previousBlock.Hash) {
 				return false

@@ -21,12 +21,11 @@ type Block struct {
 	Nonce        int
 }
 
-func NewBlock(previous []byte, Timestamp string, data Data) *Block {
+func NewBlock(timestamp string, data Data) *Block {
 	block := &Block{
-		PreviousHash: previous,
-		Timestamp:    Timestamp,
-		Data:         data,
-		Nonce:        0,
+		Timestamp: timestamp,
+		Data:      data,
+		Nonce:     0,
 	}
 	block.Hash = calculateHash(block)
 	return block

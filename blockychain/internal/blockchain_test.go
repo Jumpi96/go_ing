@@ -10,8 +10,8 @@ var r = &BoltDBRepository{}
 func generateSimpleBlockchain() *Blockchain {
 	os.Remove("blockychain.db")
 	blockchain := NewBlockchain(r, 1)
-	blockchain.AddBlock(r, NewBlock([]byte(""), "06/27/2020", Data{Value: "This is a second block"}))
-	blockchain.AddBlock(r, NewBlock([]byte(""), "06/27/2020", Data{Value: "This is the third block"}))
+	blockchain.AddBlock(r, NewBlock("06/27/2020", Data{Value: "This is a second block"}))
+	blockchain.AddBlock(r, NewBlock("06/27/2020", Data{Value: "This is the third block"}))
 	return blockchain
 }
 
@@ -20,9 +20,9 @@ func TestAddBlocksToBlockchain(t *testing.T) {
 
 	expectedValue := 3
 
-	iterator := BlockchainIterator{blockchain.Tip}
-	count := 1
-	for iterator.Next(r) != nil {
+	iterator := BlockchainIterator{blockchain.Tip, r}
+	count := 0
+	for iterator.Next() != nil {
 		count++
 	}
 
