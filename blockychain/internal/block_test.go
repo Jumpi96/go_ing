@@ -6,7 +6,7 @@ import (
 
 func TestMineBlock(t *testing.T) {
 	difficulty := 1
-	b := NewBlock("06/27/2020", Data{Value: "This is a first block"})
+	b := NewBlock("06/27/2020", []*Transaction{})
 	b.mineBlock(difficulty)
 	if b.Nonce == 0 {
 		t.Errorf("I don't think mining is working.")

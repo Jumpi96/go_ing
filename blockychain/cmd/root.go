@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var blockchain *internal.Blockchain
 var repository = &internal.BoltDBRepository{}
 var difficulty = 1
 
@@ -16,6 +15,5 @@ var RootCmd = &cobra.Command{
 }
 
 func Init(r *internal.BoltDBRepository) {
-	blockchain = internal.NewBlockchain(r, difficulty)
 	RootCmd.Execute()
 }

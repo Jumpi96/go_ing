@@ -6,34 +6,42 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"strings"
 )
-
-type Data struct {
-	Value string
-}
 
 type Block struct {
 	PreviousHash []byte
 	Timestamp    string
-	Data         Data
+	Transactions []*Transaction
 	Hash         []byte
 	Nonce        int
 }
 
-func NewBlock(timestamp string, data Data) *Block {
+func NewBlock(timestamp string, txs []*Transaction) *Block {
 	block := &Block{
-		Timestamp: timestamp,
-		Data:      data,
-		Nonce:     0,
+		Timestamp:    timestamp,
+		Transactions: txs,
+		Nonce:        0,
 	}
 	block.Hash = calculateHash(block)
 	return block
 }
 
 func calculateHash(b *Block) []byte {
-	input := fmt.Sprintf("%v%v%v%v", b.PreviousHash, b.Timestamp, b.Data, b.Nonce)
+	input := fmt.Sprintf("%v%v%x%v", b.PreviousHash, b.Timestamp, b.hashTransactions(), b.Nonce)
 	return SHA256(input)
+}
+
+func (b *Block) hashTransactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+	return txHash[:]
 }
 
 func SHA256(text string) []byte {
@@ -55,7 +63,7 @@ func (b *Block) serializeBlock() []byte {
 	e := gob.NewEncoder(&buffer)
 	err := e.Encode(b)
 	if err != nil {
-		panic(fmt.Sprintf("Serializing %v", err))
+		log.Panic(fmt.Sprintf("Serializing %v", err))
 	}
 	return buffer.Bytes()
 }
@@ -67,7 +75,7 @@ func deserializeBlock(d []byte) *Block {
 	decoder := gob.NewDecoder(&buffer)
 	err := decoder.Decode(&b)
 	if err != nil {
-		panic(fmt.Sprintf("Deserializing %v %v", d, err))
+		log.Panic(fmt.Sprintf("Deserializing %v %v", d, err))
 	}
 	return b
 }
