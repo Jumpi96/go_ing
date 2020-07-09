@@ -31,6 +31,7 @@ func TestNewBlockchain(t *testing.T) {
 	difficulty := 1
 	address := "testing"
 	genesis := createGenesisBlock(address)
+	genesis.mineBlock(difficulty)
 
 	blockchain := NewBlockchain(r, address, difficulty)
 
@@ -53,6 +54,7 @@ func TestGetBlockchainThatExistsAndThatNotExists(t *testing.T) {
 	getLastBlockHashMock = func() ([]byte, error) {
 		// Genesis block hash with "testing" address
 		genesis := createGenesisBlock(address)
+		genesis.mineBlock(difficulty)
 		return genesis.Hash, nil
 	}
 

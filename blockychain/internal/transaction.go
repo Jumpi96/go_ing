@@ -29,7 +29,7 @@ type TXOutput struct {
 	ScriptKey string // A puzzle to unlock the output in Script language
 }
 
-var subsidy int = 50
+const subsidy int = 50
 
 // SetID sets ID of a transaction
 func (tx *Transaction) SetID() {
@@ -49,9 +49,10 @@ func newCoinbaseTransaction(to string) *Transaction {
 	data := fmt.Sprintf("Reward to '%s'", to)
 	txin := TXInput{[]byte{}, -1, data}
 	txout := TXOutput{subsidy, to}
-	tx := &Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
+	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
 	tx.SetID()
-	return tx
+
+	return &tx
 }
 
 func (in *TXInput) outputUnlockableWith(unlockingData string) bool {

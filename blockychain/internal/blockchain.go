@@ -11,10 +11,11 @@ type Blockchain struct {
 	difficulty int
 }
 
-var genesisPreviousHash []byte = []byte("0")
+var genesisPreviousHash = []byte{}
 
 func NewBlockchain(r Repository, address string, difficulty int) *Blockchain {
 	genesis := createGenesisBlock(address)
+	genesis.mineBlock(difficulty)
 	r.SaveNewBlock(genesis)
 	return &Blockchain{genesis.Hash, difficulty}
 }
