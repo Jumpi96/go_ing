@@ -6,7 +6,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -58,24 +57,24 @@ func (b *Block) mineBlock(difficulty int) {
 	}
 }
 
-func (b *Block) serializeBlock() []byte {
+func (b *Block) serializeBlock() ([]byte, error) {
 	buffer := bytes.Buffer{}
 	e := gob.NewEncoder(&buffer)
 	err := e.Encode(b)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Serializing %v", err))
+		return nil, err
 	}
-	return buffer.Bytes()
+	return buffer.Bytes(), nil
 }
 
-func deserializeBlock(d []byte) *Block {
+func deserializeBlock(d []byte) (*Block, error) {
 	b := &Block{}
 	buffer := bytes.Buffer{}
 	buffer.Write(d)
 	decoder := gob.NewDecoder(&buffer)
 	err := decoder.Decode(&b)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Deserializing %v %v", d, err))
+		return nil, err
 	}
-	return b
+	return b, nil
 }

@@ -1,6 +1,9 @@
 package internal
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/boltdb/bolt"
 )
 
@@ -21,7 +24,11 @@ func (r *BoltDBRepository) SaveNewBlock(block *Block) error {
 		if b == nil {
 			b, _ = tx.CreateBucket([]byte(blocksBucket))
 		}
-		err := b.Put([]byte(block.Hash), block.serializeBlock())
+		serialized, err := block.serializeBlock()
+		if err != nil {
+			log.Panic(fmt.Sprintf("Serializing error: %v", err))
+		}
+		err = b.Put([]byte(block.Hash), serialized)
 		err = b.Put([]byte("l"), []byte(block.Hash))
 		return err
 	})
@@ -59,5 +66,11 @@ func (r *BoltDBRepository) GetBlock(hash []byte) (*Block, error) {
 		return nil, err
 	}
 
-	return deserializeBlock(block), nil
+	deserialized, err := deserializeBlock(block)
+
+	if err != nil {
+		log.Panic(fmt.Sprintf("Deserialized error: %v", err))
+	}
+
+	return deserialized, nil
 }

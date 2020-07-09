@@ -52,7 +52,8 @@ func TestGetBlockchainThatExistsAndThatNotExists(t *testing.T) {
 
 	getLastBlockHashMock = func() ([]byte, error) {
 		// Genesis block hash with "testing" address
-		return []byte{243, 61, 182, 156, 239, 7, 123, 74, 114, 86, 191, 205, 185, 74, 181, 229, 4, 172, 60, 230, 115, 137, 127, 145, 204, 66, 147, 94, 243, 116, 101, 31}, nil
+		genesis := createGenesisBlock(address)
+		return genesis.Hash, nil
 	}
 
 	blockchainGot := GetBlockchain(r, difficulty)
@@ -119,4 +120,29 @@ func TestIterator(t *testing.T) {
 		t.Errorf("Iterator should not return more blocks.")
 	}
 
+}
+func TestIsChainValid(t *testing.T) {
+	r := &mockRepository{}
+
+	blockchain := NewBlockchain(r, "testing", 1)
+
+	getBlockMock = func([]byte) (*Block, error) {
+		return createGenesisBlock("testing"), nil
+	}
+
+	if !blockchain.IsChainValid(r) {
+		t.Errorf("Blockchain PoW is not valid!")
+	}
+
+	getBlockMock = func([]byte) (*Block, error) {
+		genesis := createGenesisBlock("testing")
+		genesis.Timestamp = "Not date"
+		return genesis, nil
+	}
+
+	if blockchain.IsChainValid(r) {
+		t.Errorf("A block was tampered!")
+	}
+
+	// TODO: test a broken blockchain.
 }
