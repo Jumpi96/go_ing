@@ -5,8 +5,9 @@ import (
 	internal "./internal"
 )
 
-var r = &internal.BoltDBRepository{}
+var r *internal.BoltDBRepository
 
 func main() {
+	r := internal.InitDB()
 	cmd.Init(r)
 }

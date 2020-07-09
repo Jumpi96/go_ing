@@ -8,7 +8,7 @@ import (
 )
 
 var blocksBucket string = "blocks"
-var db, _ = bolt.Open("blockychain.db", 0600, nil)
+var db *bolt.DB
 
 type Repository interface {
 	SaveNewBlock(*Block) error
@@ -17,6 +17,11 @@ type Repository interface {
 }
 
 type BoltDBRepository struct{}
+
+func InitDB() *BoltDBRepository {
+	db, _ = bolt.Open("blockychain.db", 0600, nil)
+	return &BoltDBRepository{}
+}
 
 func (r *BoltDBRepository) SaveNewBlock(block *Block) error {
 	err := db.Update(func(tx *bolt.Tx) error {
