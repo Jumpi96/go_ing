@@ -122,7 +122,7 @@ func (c *Blockchain) findUTXO(r Repository, address string) []TXOutput {
 
 func (c *Blockchain) getUnspentTransactions(r Repository, address string) []Transaction {
 	var unspentTXs []Transaction
-	spentTXOs := make(map[string][]int)
+	spentOutputs := make(map[string][]int)
 	iterator := c.Iterator(r)
 
 	for {
@@ -131,11 +131,12 @@ func (c *Blockchain) getUnspentTransactions(r Repository, address string) []Tran
 		for _, tx := range block.Transactions {
 			txID := hex.EncodeToString(tx.ID)
 
+		Outputs:
 			for outIdx, out := range tx.Out {
-				if spentTXOs[txID] != nil { // Was the output spent?
-					for _, spentOut := range spentTXOs[txID] {
+				if spentOutputs[txID] != nil {
+					for _, spentOut := range spentOutputs[txID] {
 						if spentOut == outIdx {
-							break
+							continue Outputs
 						}
 					}
 				}
@@ -145,11 +146,11 @@ func (c *Blockchain) getUnspentTransactions(r Repository, address string) []Tran
 				}
 			}
 
-			if tx.isCoinbase() == false {
+			if !tx.isCoinbase() {
 				for _, in := range tx.In {
 					if in.outputUnlockableWith(address) {
-						inTxID := hex.EncodeToString(in.TxID)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.OutIndex)
+						inID := hex.EncodeToString(in.TxID)
+						spentOutputs[inID] = append(spentOutputs[inID], in.OutIndex)
 					}
 				}
 			}
